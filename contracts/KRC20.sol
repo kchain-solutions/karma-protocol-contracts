@@ -79,7 +79,7 @@ contract KRC20 is ERC20, Ownable {
         string memory _proposalURI,
         uint256 _deadlineDate
     ) public onlyMember afterDeadline(_deadlineDate) {
-        require(!members[newMember], "KRC20: Member already exists");
+        require(!members[newMember], "Member already exists");
         uint256 _proposalId = proposalCount;
         proposals[_proposalId] = Proposal({
             proposalName: _proposalName,
@@ -109,7 +109,7 @@ contract KRC20 is ERC20, Ownable {
         string memory _proposalURI,
         uint256 _deadlineDate
     ) public onlyMember afterDeadline(_deadlineDate) {
-        require(members[existingMember], "KRC20: Member does not exist");
+        require(members[existingMember], "Member does not exist");
         uint256 _proposalId = proposalCount;
         proposals[_proposalId] = Proposal({
             proposalName: _proposalName,
@@ -141,7 +141,7 @@ contract KRC20 is ERC20, Ownable {
     ) public afterDeadline(_deadlineDate) {
         require(
             !authorizedContracts[contractAddress],
-            "KRC20: Contract already exists"
+            "Contract already exists"
         );
         uint256 _proposalId = proposalCount;
         proposals[_proposalId] = Proposal({
@@ -172,10 +172,7 @@ contract KRC20 is ERC20, Ownable {
         string memory _proposalURI,
         uint256 _deadlineDate
     ) public onlyMember afterDeadline(_deadlineDate) {
-        require(
-            authorizedContracts[contractAddress],
-            "KRC20: Contract doesn't exist"
-        );
+        require(authorizedContracts[contractAddress], "Contract doesn't exist");
         uint256 _proposalId = proposalCount;
         proposals[_proposalId] = Proposal({
             proposalType: ProposalType.RemoveContract,
@@ -257,11 +254,8 @@ contract KRC20 is ERC20, Ownable {
 
     function voteProposal(uint256 proposalId, bool approve) public onlyMember {
         Proposal storage proposal = proposals[proposalId];
-        require(!proposalVotes[proposalId][msg.sender], "KRC20: Already voted");
-        require(
-            proposal.deadlineDate > block.timestamp,
-            "KRC20: Deadline passed"
-        );
+        require(!proposalVotes[proposalId][msg.sender], "Already voted");
+        require(proposal.deadlineDate > block.timestamp, "Deadline passed");
         proposalVotes[proposalId][msg.sender] = true;
         if (approve) {
             proposal.yesVotes++;
@@ -297,26 +291,20 @@ contract KRC20 is ERC20, Ownable {
         require(
             block.timestamp > proposal.deadlineDate ||
                 proposal.yesVotes.mul(100).div(membersCount) > 50,
-            "KRC20: Proposal can't be claimed"
+            "Proposal can't be claimed"
         );
         require(
             isQuorum(proposal.yesVotes, proposal.noVotes),
-            "KRC20: Quorum not reached"
+            "Quorum not reached"
         );
         if (proposal.proposalType == ProposalType.AddMember) {
-            require(
-                !members[proposal.targetAddress],
-                "KRC20: Member already claimed"
-            );
+            require(!members[proposal.targetAddress], "Member already claimed");
             proposal.approved = true;
             membersCount.add(1);
             members[proposal.targetAddress] = true;
             emit ApprovedProposal(proposalId);
         } else if (proposal.proposalType == ProposalType.RemoveMember) {
-            require(
-                members[proposal.targetAddress],
-                "KRC20: Member already removed"
-            );
+            require(members[proposal.targetAddress], "Member already removed");
             proposal.approved = true;
             membersCount.sub(1);
             members[proposal.targetAddress] = false;
@@ -324,7 +312,7 @@ contract KRC20 is ERC20, Ownable {
         } else if (proposal.proposalType == ProposalType.AddContract) {
             require(
                 !authorizedContracts[proposal.targetAddress],
-                "KRC20: Contract already claimed"
+                "Contract already claimed"
             );
             proposal.approved = true;
             authorizedContracts[proposal.targetAddress] = true;
@@ -332,7 +320,7 @@ contract KRC20 is ERC20, Ownable {
         } else if (proposal.proposalType == ProposalType.RemoveContract) {
             require(
                 authorizedContracts[proposal.targetAddress],
-                "KRC20: Contract already removed"
+                "Contract already removed"
             );
             proposal.approved = true;
             authorizedContracts[proposal.targetAddress] = false;
@@ -369,7 +357,7 @@ contract KRC20 is ERC20, Ownable {
         address recipient,
         uint256 amount
     ) public override returns (bool) {
-        require(balanceOf(msg.sender) >= amount, "KRC20: insufficient balance");
+        require(balanceOf(msg.sender) >= amount, "insufficient balance");
         uint256 toBurn = amount.mul(burningRate).div(100);
         uint toTransfer = amount - toBurn;
         _burn(msg.sender, toBurn);
@@ -389,14 +377,15 @@ contract KRC20 is ERC20, Ownable {
     function donation() public payable {}
 
     function claimRewards() public onlyOwner onlyAfterSevenDays {
-        require(totalVotes > 0, "KRC20: No Votes to claim");
+        require(totalVotes > 0, "No Votes to claim");
         uint256 balance = address(this).balance;
-        require(balance > 10 ** 16, "KRC20: Not enought balance to share");
+        require(balance > 10 ** 16, "Not enought balance to share");
         uint256 amount4Investor = (balance * INVESTOR_PERCENTAGE) / 100;
         balance = balance - amount4Investor;
-        address(investorVaultAddress).call{value: amount4Investor}(
-            abi.encodeWithSignature("receiveEther()")
-        );
+        (bool success, ) = address(investorVaultAddress).call{
+            value: amount4Investor
+        }(abi.encodeWithSignature("receiveEther()"));
+        if (!success) revert();
 
         uint256 share = balance.div(totalVotes);
         for (uint256 i = 0; i < eligibleToRewardMembers.length; i++) {
@@ -419,30 +408,27 @@ contract KRC20 is ERC20, Ownable {
     }
 
     modifier onlyMember() {
-        require(members[msg.sender], "KRC20: Caller is not a member");
+        require(members[msg.sender], "Caller is not a member");
         _;
     }
 
     modifier onlyAuthorizedContract() {
         require(
             authorizedContracts[msg.sender],
-            "KRC20: Caller is not an authorized contract"
+            "Caller is not an authorized contract"
         );
         _;
     }
 
     modifier afterDeadline(uint256 _deadlineDate) {
-        require(
-            _deadlineDate > block.timestamp + 300,
-            "KRC20: Deadline not valid"
-        );
+        require(_deadlineDate > block.timestamp + 300, "Deadline not valid");
         _;
     }
 
     modifier onlyAfterSevenDays() {
         require(
             block.timestamp >= lastRewardClaim + WAIT_TIME_REWARD,
-            "KRC20: ClaimReward: Must wait 7 days between claims"
+            "ClaimReward: Must wait 7 days between claims"
         );
         _;
     }

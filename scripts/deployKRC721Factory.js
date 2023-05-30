@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-const KRC20_ADDRESS = "0x3dB3c5B2176bCc5b76eDE07E6555BEd3eeac1B31"
+const KRC20_ADDRESS = "0xD36E4bcc2CC27CC006CDF69bDf95e4ca3EF3E436"
 
 async function main() {
   const [deployer] = await ethers.getSigners();
