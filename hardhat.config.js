@@ -5,7 +5,7 @@ require('dotenv').config();
 const MNEMONIC = process.env.MNEMONIC;
 const SEPOLIA_ENDPOINT = process.env.SEPOLIA_ENDPOINT;
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
-const KRC20_ADDRESS = "0x3dB3c5B2176bCc5b76eDE07E6555BEd3eeac1B31"
+const KRC20_ADDRESS = process.env.KRC20_ADDRESS;
 
 function accounts() {
   return { mnemonic: MNEMONIC };

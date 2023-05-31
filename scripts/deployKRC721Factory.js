@@ -1,5 +1,6 @@
 const hre = require("hardhat");
-const KRC20_ADDRESS = "0xD36E4bcc2CC27CC006CDF69bDf95e4ca3EF3E436"
+require('dotenv').config();
+const KRC20_ADDRESS = process.env.KRC20_ADDRESS
 
 async function main() {
   const [deployer] = await ethers.getSigners();
