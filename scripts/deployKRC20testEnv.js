@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+const { ethers } = require("hardhat");
 
 function toBigNumber(tokens) {
     return ethers.BigNumber.from(tokens).mul(ethers.BigNumber.from(10).pow(18));

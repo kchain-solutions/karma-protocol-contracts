@@ -1,4 +1,5 @@
 const hre = require("hardhat");
+const { ethers } = require("hardhat");
 require('dotenv').config();
 const KRC20_ADDRESS = process.env.KRC20_ADDRESS
 
